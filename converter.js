@@ -50,8 +50,8 @@ const units = [Units.CM, Units.INCH, Units.KM, Units.MT];
 const unitRatios = new Map();
 unitRatios.set(new tuple(Units.KM, Units.CM), 100000);
 unitRatios.set(new tuple(Units.INCH, Units.CM), 2.54);
-unitRatios.set(new tuple(Units.KM, Units.INCH), 2540);
-unitRatios.set(new tuple(Units.MT, Units.KM), 1000);
+unitRatios.set(new tuple(Units.KM, Units.INCH), 39370.1);
+unitRatios.set(new tuple(Units.KM, Units.MT), 1000);
 unitRatios.set(new tuple(Units.INCH, Units.MT), .0254);
 unitRatios.set(new tuple(Units.MT, Units.CM), 100);
 
@@ -74,7 +74,7 @@ function convert() {
     const multiplier = searchFx(sourceValue, targetValue);
     const outputElement = document.querySelector("#output");
     let output = "Couldn't find conversion ratio";
-    
+
     if (multiplier !== undefined) {
         const value = document.querySelector("#value");
         output = !Number.isNaN(Number(value.value)) ? value.value * multiplier : "Oops. It's not a number!!!";
