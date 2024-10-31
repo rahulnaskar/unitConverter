@@ -74,13 +74,12 @@ function convert() {
         return;
     }
 
-    const num = Number(input.value);
-    if (Number.isNaN(num)) {
+    const value = Number(input.value);
+    if (Number.isNaN(value)) {
         output.textContent = "Oops. It's not a number!!!";
         return;
     }
 
-    const value = Number(num);
     const multiplier = searchFx(source.value, target.value);
     if (multiplier === undefined) {
         output.textContent = "Couldn't find conversion ratio";
