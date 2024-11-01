@@ -27,13 +27,12 @@ class tuple {
 function searchBuilder(uMap) {
     const umap = uMap;
     mapSearch = (key, value) => {
+        if (key === value) return 1;
         for (const [k, v] of umap.entries()) {
             if (k.source === key && k.target == value) {
                 return v;
             } else if (k.target === key && k.source === value) {
                 return 1 / v;
-            } else if (key === value) {
-                return 1;
             }
         }
         return undefined;
@@ -60,26 +59,35 @@ let searchFx = searchBuilder(unitRatios);
 document.addEventListener("DOMContentLoaded", () => {
     clearUnits();
     loadUnits();
-    document.querySelector("#invoke").addEventListener("click", convert);
+    document.querySelector("#value").value = "";
+    ["#source", "#target", "#value"].map(e => document.querySelector(e)).forEach(input => {
+        input.addEventListener("change", convert);
+        input.addEventListener("input", convert);
+    });
 });
 
 
 function convert() {
-    const source = document.querySelector("#source");
-    const sourceValue = source.value;
-
-    const target = document.querySelector("#target");
-    const targetValue = target.value;
-
-    const multiplier = searchFx(sourceValue, targetValue);
-    const outputElement = document.querySelector("#output");
-    let output = "Couldn't find conversion ratio";
-    
-    if (multiplier !== undefined) {
-        const value = document.querySelector("#value");
-        output = !Number.isNaN(Number(value.value)) ? value.value * multiplier : "Oops. It's not a number!!!";
+    const [source, target, input, output] = ["#source", "#target", "#value", "#output"].map(e => document.querySelector(e));
+    if (!input.value) {
+        output.textContent = input.placeholder;
+        return;
     }
-    outputElement.innerHTML = output;
+
+    const value = Number(input.value);
+    if (Number.isNaN(value)) {
+        output.textContent = "Oops. It's not a number!!!";
+        return;
+    }
+
+    const multiplier = searchFx(source.value, target.value);
+    if (multiplier === undefined) {
+        output.textContent = "Couldn't find conversion ratio";
+        return;
+    }
+
+    const result = value * multiplier;
+    output.textContent = `${value} ${source.value} <=> ${result} ${target.value}`;
 }
 
 function clearUnits() {
