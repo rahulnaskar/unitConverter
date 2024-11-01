@@ -1,5 +1,6 @@
 
 const Units = Object.freeze({
+    BU: Symbol("bu"), //Base Unit for this system
     CM: Symbol("cm"),
     INCH: Symbol("in"),
     KM: Symbol("km"),
@@ -54,6 +55,49 @@ unitRatios.set(new tuple(Units.MT, Units.KM), 1000);
 unitRatios.set(new tuple(Units.INCH, Units.MT), .0254);
 unitRatios.set(new tuple(Units.MT, Units.CM), 100);
 
+
+
+const recurseUnits = [
+    {"source": Units.BU, "target": Units.CM, "ratio": 1},
+    {"source": Units.CM, "target": Units.MT, "ratio": 100},
+    {"source": Units.MT, "target": Units.KM, "ratio": 1000},
+    {"source": Units.CM, "target": Units.INCH, "ratio": 0.393700787}
+];
+
+const PARENT = "parent";
+const CHILDREN = "children";
+const RATIO = "ratio";
+
+function CreateConversionTree() {
+    let node = {PARENT: Units.BU, RATIO: 1, CHILDREN: []};
+
+    function findNode(n, value) {
+        if (Object.keys(n).length === 0) {
+            return undefined;
+        }
+        if (n.PARENT === value) {
+            console.log(`Found ${n.PARENT.description}`);
+            return n;
+        } else {
+            n.CHILDREN.map((e) => findNode(e, value));
+        }
+    };
+
+    recurseUnits.map((e) => {
+        const foundNode = findNode(node, e.source);
+        if (foundNode !== undefined) {
+            node.CHILDREN.push({PARENT: e.target, RATIO: e.ratio, CHILDREN: []});
+        }
+        console.log(`Tree is ${node}`);
+    });
+}
+
+function FindPath(source, target) {
+    recurseUnits.map((e) => {
+        console.log(`e is ${e.source.description} ${e.target.description} ${e.ratio}`);
+    });
+}
+
 let searchFx = searchBuilder(unitRatios);
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -64,6 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         input.addEventListener("change", convert);
         input.addEventListener("input", convert);
     });
+    CreateConversionTree();
 });
 
 
