@@ -1,11 +1,11 @@
 
 const Units = Object.freeze({
-    BU: Symbol("bu"), //Base Unit for this system
-    CM: Symbol("cm"),
-    IN: Symbol("in"),
-    KM: Symbol("km"),
-    MT: Symbol("mt"),
-    YD: Symbol("yd")
+    BU: "bu", //Base Unit for this system
+    CM: "cm",
+    IN: "in",
+    KM: "km",
+    MT: "mt",
+    YD: "yd"
 });
 
 class tuple {
@@ -18,11 +18,11 @@ class tuple {
     }
 
     get source() {
-        return `${this.#key.description}`;
+        return `${this.#key}`;
     }
 
     get target() {
-        return `${this.#value.description}`;
+        return `${this.#value}`;
     }
 }
 
@@ -123,25 +123,16 @@ function CreateConversionTree() {
     unitsOfLength.map((e) => {
         us.addMeasure(e.target, e.source, e.ratio);
     });
-    let x = us.getNodeGraph();
-
-    const s = Units.YD;
-    const t = Units.MT;
-    const v = 1;
-    
-    console.log(`${s.description} to ${t.description} of ${v} is ${us.convert(s, t, v)}`);
-
-    us.changeBasis(Units.YD);
-    console.log(`${s.description} to ${t.description} of ${v} is ${us.convert(s, t, v)}`);
+    return us;
 }
 
 function FindPath(source, target) {
     unitsOfLength.map((e) => {
-        console.log(`e is ${e.source.description} ${e.target.description} ${e.ratio}`);
+        console.log(`e is ${e.source} ${e.target} ${e.ratio}`);
     });
 }
 
-let searchFx = searchBuilder(unitRatios);
+const conversionTree = CreateConversionTree();
 
 document.addEventListener("DOMContentLoaded", () => {
     clearUnits();
@@ -151,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
         input.addEventListener("change", convert);
         input.addEventListener("input", convert);
     });
-    CreateConversionTree();
+    // CreateConversionTree();
 });
 
 
@@ -167,13 +158,10 @@ function convert() {
         return;
     }
 
-    const multiplier = searchFx(source.value, target.value);
-    if (multiplier === undefined) {
-        output.textContent = "Couldn't find conversion ratio";
-        return;
-    }
-    const result = value * multiplier;
-    output.textContent = `${value} ${source.value} <=> ${result} ${target.value}`;
+    const result = conversionTree.convert(source.value, target.value, value);
+    output.textContent = (result === undefined || Number.isNaN(result))
+        ? "Couldn't find conversion ratio"
+        : `${value} ${source.value} <=> ${result} ${target.value}`;
 }
 
 function clearUnits() {
@@ -188,10 +176,10 @@ function clearUnits() {
 function loadUnits() {
     const targets = [document.querySelector("#source"), document.querySelector("#target")];
     targets.map((e) => {
-        [...units].map((d) => {
+        units.forEach((d) => {
             const opt = document.createElement("option");
-            opt.value = d.description;
-            opt.innerHTML = d.description;
+            opt.value = d;
+            opt.innerHTML = d;
             e.appendChild(opt);
         });
     });
