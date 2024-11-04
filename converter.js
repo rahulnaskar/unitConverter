@@ -48,17 +48,6 @@ function isNumber(value) {
 
 const units = [Units.CM, Units.IN, Units.KM, Units.MT, Units.YD];
 
-const unitRatios = new Map();
-unitRatios.set(new tuple(Units.KM, Units.CM), 100000);
-unitRatios.set(new tuple(Units.IN, Units.CM), 2.54);
-unitRatios.set(new tuple(Units.KM, Units.IN), 39370.1);
-unitRatios.set(new tuple(Units.KM, Units.MT), 1000);
-unitRatios.set(new tuple(Units.IN, Units.MT), .0254);
-unitRatios.set(new tuple(Units.MT, Units.CM), 100);
-unitRatios.set(new tuple(Units.YD, Units.KM), 1.333333);
-
-
-
 const unitsOfLength = [
     { "source": Units.BU, "target": Units.CM, "ratio": 1 },
     { "source": Units.CM, "target": Units.MT, "ratio": 100 },
@@ -142,7 +131,6 @@ document.addEventListener("DOMContentLoaded", () => {
         input.addEventListener("change", convert);
         input.addEventListener("input", convert);
     });
-    // CreateConversionTree();
 });
 
 
