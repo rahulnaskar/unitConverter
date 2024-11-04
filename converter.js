@@ -8,44 +8,6 @@ const Units = Object.freeze({
     YD: "yd"
 });
 
-class tuple {
-    #key = undefined;
-    #value = undefined;
-
-    constructor(key, value) {
-        this.#key = key;
-        this.#value = value;
-    }
-
-    get source() {
-        return `${this.#key}`;
-    }
-
-    get target() {
-        return `${this.#value}`;
-    }
-}
-
-function searchBuilder(uMap) {
-    const umap = uMap;
-    mapSearch = (key, value) => {
-        if (key === value) return 1;
-        for (const [k, v] of umap.entries()) {
-            if (k.source === key && k.target == value) {
-                return v;
-            } else if (k.target === key && k.source === value) {
-                return 1 / v;
-            }
-        }
-        return undefined;
-    }
-    return mapSearch;
-}
-
-function isNumber(value) {
-    return typeof value === 'number';
-}
-
 const units = [Units.CM, Units.IN, Units.KM, Units.MT, Units.YD];
 
 const unitsOfLength = [
@@ -113,12 +75,6 @@ function CreateConversionTree() {
         us.addMeasure(e.target, e.source, e.ratio);
     });
     return us;
-}
-
-function FindPath(source, target) {
-    unitsOfLength.map((e) => {
-        console.log(`e is ${e.source} ${e.target} ${e.ratio}`);
-    });
 }
 
 const conversionTree = CreateConversionTree();
