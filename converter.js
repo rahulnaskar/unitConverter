@@ -1,3 +1,4 @@
+import { UnitSystemBuilder } from "./modules/us.js"
 
 const Units = Object.freeze({
     CM: "cm",
@@ -8,73 +9,13 @@ const Units = Object.freeze({
 });
 
 const unitsOfLength = [
-    { "source": Units.CM, "target": Units.MT, "ratio": 100 },
-    { "source": Units.MT, "target": Units.KM, "ratio": 1000 },
-    { "source": Units.CM, "target": Units.IN, "ratio": 0.393700787 },
-    { "source": Units.IN, "target": Units.YD, "ratio": 36 }
+    { "source": Units.CM, "target": Units.MT, "ratio": .01 },
+    { "source": Units.MT, "target": Units.KM, "ratio": .001 },
+    { "source": Units.KM, "target": Units.IN, "ratio":  39370.1},
+    { "source": Units.KM, "target": Units.YD, "ratio": 1093.61 }
 ];
 
-const PARENT = "parent";
-const CHILDREN = "children";
-const RATIO = "ratio";
-
-function configureUnitSystem(baseunit) {
-    const childMap = new Map();
-    childMap.set(baseunit, 1);
-    const nodeGraph = { BASEUNIT: baseunit, RATIO: 1, CHILDREN: childMap };
-
-    const controller = {
-
-        changeBasis: (unitIdentifier) => {
-            const unitIdentifierInChildList = nodeGraph.CHILDREN.get(unitIdentifier);
-            if (unitIdentifierInChildList !== undefined) {
-                nodeGraph.BASEUNIT = unitIdentifier;
-                nodeGraph.RATIO = 1 / unitIdentifierInChildList;
-            }
-
-        },
-
-        addMeasure: (unit, parent, ratio) => {
-            if (parent === nodeGraph.BASEUNIT) {
-                nodeGraph.CHILDREN.set(unit, ratio);
-                return;
-            }
-
-            const parentNodeInChildList = nodeGraph.CHILDREN.get(parent);
-            if ((parentNodeInChildList !== undefined)) {
-                nodeGraph.CHILDREN.set(unit, ratio * parentNodeInChildList);
-            }
-        },
-
-        convert: (source, target, val) => {
-            const sourceRatioInChildList = nodeGraph.CHILDREN.get(source);
-
-            if ((sourceRatioInChildList !== undefined)) {
-                const sourceRatio = sourceRatioInChildList * nodeGraph.RATIO;
-                const targetRatioInChildList = nodeGraph.CHILDREN.get(target);
-                const targetRatio = targetRatioInChildList * nodeGraph.RATIO;
-                return val * (sourceRatio / targetRatio);
-            }
-        },
-
-        getNodeGraph: () => {
-            return nodeGraph;
-        }
-    };
-
-    return controller;
-}
-
-function CreateConversionTree() {
-    let us = configureUnitSystem(Units.CM);
-
-    unitsOfLength.map((e) => {
-        us.addMeasure(e.target, e.source, e.ratio);
-    });
-    return us;
-}
-
-const conversionTree = CreateConversionTree();
+const conversionTree = UnitSystemBuilder(Units.CM, unitsOfLength);
 
 document.addEventListener("DOMContentLoaded", () => {
     clearUnits();
