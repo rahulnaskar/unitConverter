@@ -13,7 +13,7 @@ const unitsOfLength = [
     { "source": Units.CM, "target": Units.MT, "ratio": 100 },
     { "source": Units.MT, "target": Units.KM, "ratio": 1000 },
     { "source": Units.CM, "target": Units.IN, "ratio": 0.393700787 },
-    { "source": Units.KM, "target": Units.YD, "ratio": 1.333333 }
+    { "source": Units.IN, "target": Units.YD, "ratio": 36 }
 ];
 
 const PARENT = "parent";
