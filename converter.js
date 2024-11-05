@@ -1,6 +1,5 @@
 
 const Units = Object.freeze({
-    BU: "bu", //Base Unit for this system
     CM: "cm",
     IN: "in",
     KM: "km",
@@ -11,7 +10,6 @@ const Units = Object.freeze({
 const units = [Units.CM, Units.IN, Units.KM, Units.MT, Units.YD];
 
 const unitsOfLength = [
-    { "source": Units.BU, "target": Units.CM, "ratio": 1 },
     { "source": Units.CM, "target": Units.MT, "ratio": 100 },
     { "source": Units.MT, "target": Units.KM, "ratio": 1000 },
     { "source": Units.CM, "target": Units.IN, "ratio": 0.393700787 },
@@ -21,12 +19,13 @@ const unitsOfLength = [
 const PARENT = "parent";
 const CHILDREN = "children";
 const RATIO = "ratio";
-const BASIS = "basis";
 
-function configureUnitSystem(baseunit, ratio, basis) {
-    const nodeGraph = { BASEUNIT: baseunit, RATIO: ratio, BASIS: basis, CHILDREN: new Map() };
+function configureUnitSystem(baseunit) {
+    const childMap = new Map();
+    childMap.set(baseunit, 1);
+    const nodeGraph = { BASEUNIT: baseunit, RATIO: 1, CHILDREN: childMap };
 
-    const helpers = {
+    const controller = {
 
         changeBasis: (unitIdentifier) => {
             const unitIdentifierInChildList = nodeGraph.CHILDREN.get(unitIdentifier);
@@ -65,11 +64,11 @@ function configureUnitSystem(baseunit, ratio, basis) {
         }
     };
 
-    return helpers;
+    return controller;
 }
 
 function CreateConversionTree() {
-    let us = configureUnitSystem(Units.BU, 1, Units.CM);
+    let us = configureUnitSystem(Units.CM);
 
     unitsOfLength.map((e) => {
         us.addMeasure(e.target, e.source, e.ratio);
