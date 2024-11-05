@@ -7,8 +7,6 @@ const Units = Object.freeze({
     YD: "yd"
 });
 
-const units = [Units.CM, Units.IN, Units.KM, Units.MT, Units.YD];
-
 const unitsOfLength = [
     { "source": Units.CM, "target": Units.MT, "ratio": 100 },
     { "source": Units.MT, "target": Units.KM, "ratio": 1000 },
@@ -119,10 +117,10 @@ function clearUnits() {
 function loadUnits() {
     const targets = [document.querySelector("#source"), document.querySelector("#target")];
     targets.map((e) => {
-        units.forEach((d) => {
+        conversionTree.getNodeGraph().CHILDREN.forEach((v, k) => {
             const opt = document.createElement("option");
-            opt.value = d;
-            opt.innerHTML = d;
+            opt.value = k;
+            opt.innerHTML = k;
             e.appendChild(opt);
         });
     });
