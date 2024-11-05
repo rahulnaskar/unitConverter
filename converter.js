@@ -1,104 +1,80 @@
 
 const Units = Object.freeze({
-    BU: Symbol("bu"), //Base Unit for this system
-    CM: Symbol("cm"),
-    INCH: Symbol("in"),
-    KM: Symbol("km"),
-    MT: Symbol("mt")
+    CM: "cm",
+    IN: "in",
+    KM: "km",
+    MT: "mt",
+    YD: "yd"
 });
 
-class tuple {
-    #key = undefined;
-    #value = undefined;
-
-    constructor(key, value) {
-        this.#key = key;
-        this.#value = value;
-    }
-
-    get source() {
-        return `${this.#key.description}`;
-    }
-
-    get target() {
-        return `${this.#value.description}`;
-    }
-}
-
-function searchBuilder(uMap) {
-    const umap = uMap;
-    mapSearch = (key, value) => {
-        if (key === value) return 1;
-        for (const [k, v] of umap.entries()) {
-            if (k.source === key && k.target == value) {
-                return v;
-            } else if (k.target === key && k.source === value) {
-                return 1 / v;
-            }
-        }
-        return undefined;
-    }
-    return mapSearch;
-}
-
-function isNumber(value) {
-    return typeof value === 'number';
-}
-
-const units = [Units.CM, Units.INCH, Units.KM, Units.MT];
-
-const unitRatios = new Map();
-unitRatios.set(new tuple(Units.KM, Units.CM), 100000);
-unitRatios.set(new tuple(Units.INCH, Units.CM), 2.54);
-unitRatios.set(new tuple(Units.KM, Units.INCH), 39370.1);
-unitRatios.set(new tuple(Units.KM, Units.MT), 1000);
-unitRatios.set(new tuple(Units.INCH, Units.MT), .0254);
-unitRatios.set(new tuple(Units.MT, Units.CM), 100);
-
-
-
-const recurseUnits = [
-    {"source": Units.BU, "target": Units.CM, "ratio": 1},
-    {"source": Units.CM, "target": Units.MT, "ratio": 100},
-    {"source": Units.MT, "target": Units.KM, "ratio": 1000},
-    {"source": Units.CM, "target": Units.INCH, "ratio": 0.393700787}
+const unitsOfLength = [
+    { "source": Units.CM, "target": Units.MT, "ratio": 100 },
+    { "source": Units.MT, "target": Units.KM, "ratio": 1000 },
+    { "source": Units.CM, "target": Units.IN, "ratio": 0.393700787 },
+    { "source": Units.IN, "target": Units.YD, "ratio": 36 }
 ];
 
 const PARENT = "parent";
 const CHILDREN = "children";
 const RATIO = "ratio";
 
-function CreateConversionTree() {
-    let node = {PARENT: Units.BU, RATIO: 1, CHILDREN: []};
+function configureUnitSystem(baseunit) {
+    const childMap = new Map();
+    childMap.set(baseunit, 1);
+    const nodeGraph = { BASEUNIT: baseunit, RATIO: 1, CHILDREN: childMap };
 
-    function findNode(n, value) {
-        if (Object.keys(n).length === 0) {
-            return undefined;
-        }
-        if (n.PARENT === value) {
-            console.log(`Found ${n.PARENT.description}`);
-            return n;
-        } else {
-            n.CHILDREN.map((e) => findNode(e, value));
+    const controller = {
+
+        changeBasis: (unitIdentifier) => {
+            const unitIdentifierInChildList = nodeGraph.CHILDREN.get(unitIdentifier);
+            if (unitIdentifierInChildList !== undefined) {
+                nodeGraph.BASEUNIT = unitIdentifier;
+                nodeGraph.RATIO = 1 / unitIdentifierInChildList;
+            }
+
+        },
+
+        addMeasure: (unit, parent, ratio) => {
+            if (parent === nodeGraph.BASEUNIT) {
+                nodeGraph.CHILDREN.set(unit, ratio);
+                return;
+            }
+
+            const parentNodeInChildList = nodeGraph.CHILDREN.get(parent);
+            if ((parentNodeInChildList !== undefined)) {
+                nodeGraph.CHILDREN.set(unit, ratio * parentNodeInChildList);
+            }
+        },
+
+        convert: (source, target, val) => {
+            const sourceRatioInChildList = nodeGraph.CHILDREN.get(source);
+
+            if ((sourceRatioInChildList !== undefined)) {
+                const sourceRatio = sourceRatioInChildList * nodeGraph.RATIO;
+                const targetRatioInChildList = nodeGraph.CHILDREN.get(target);
+                const targetRatio = targetRatioInChildList * nodeGraph.RATIO;
+                return val * (sourceRatio / targetRatio);
+            }
+        },
+
+        getNodeGraph: () => {
+            return nodeGraph;
         }
     };
 
-    recurseUnits.map((e) => {
-        const foundNode = findNode(node, e.source);
-        if (foundNode !== undefined) {
-            node.CHILDREN.push({PARENT: e.target, RATIO: e.ratio, CHILDREN: []});
-        }
-        console.log(`Tree is ${node}`);
-    });
+    return controller;
 }
 
-function FindPath(source, target) {
-    recurseUnits.map((e) => {
-        console.log(`e is ${e.source.description} ${e.target.description} ${e.ratio}`);
+function CreateConversionTree() {
+    let us = configureUnitSystem(Units.CM);
+
+    unitsOfLength.map((e) => {
+        us.addMeasure(e.target, e.source, e.ratio);
     });
+    return us;
 }
 
-let searchFx = searchBuilder(unitRatios);
+const conversionTree = CreateConversionTree();
 
 document.addEventListener("DOMContentLoaded", () => {
     clearUnits();
@@ -108,28 +84,25 @@ document.addEventListener("DOMContentLoaded", () => {
         input.addEventListener("change", convert);
         input.addEventListener("input", convert);
     });
-    CreateConversionTree();
 });
 
 
 function convert() {
-    const source = document.querySelector("#source");
-    const sourceValue = source.value;
-
-    const target = document.querySelector("#target");
-    const targetValue = target.value;
-
-    const multiplier = searchFx(sourceValue, targetValue);
-    const outputElement = document.querySelector("#output");
-    let output = "Couldn't find conversion ratio";
-
-    if (multiplier !== undefined) {
-        const value = document.querySelector("#value");
-        output = !Number.isNaN(Number(value.value)) 
-        ? `${value.value} ${source.value} <=> ${Number(value.value) * multiplier} ${target.value}` 
-        : "Oops. It's not a number!!!";
+    const [source, target, input, output] = ["#source", "#target", "#value", "#output"].map(e => document.querySelector(e));
+    if (!input.value) {
+        output.textContent = input.placeholder;
+        return;
     }
-    outputElement.innerHTML = output;
+    const value = Number(input.value);
+    if (Number.isNaN(value)) {
+        output.textContent = "Oops. It's not a number!!!";
+        return;
+    }
+
+    const result = conversionTree.convert(source.value, target.value, value);
+    output.textContent = (result === undefined || Number.isNaN(result))
+        ? "Couldn't find conversion ratio"
+        : `${value} ${source.value} <=> ${result} ${target.value}`;
 }
 
 function clearUnits() {
@@ -144,10 +117,10 @@ function clearUnits() {
 function loadUnits() {
     const targets = [document.querySelector("#source"), document.querySelector("#target")];
     targets.map((e) => {
-        [...units].map((d) => {
+        conversionTree.getNodeGraph().CHILDREN.forEach((v, k) => {
             const opt = document.createElement("option");
-            opt.value = d.description;
-            opt.innerHTML = d.description;
+            opt.value = k;
+            opt.innerHTML = k;
             e.appendChild(opt);
         });
     });
